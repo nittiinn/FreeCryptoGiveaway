@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Contract Interface</title>
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.4.0/dist/web3.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        h1, h3 {
+            font-family: 'Arial', sans-serif;
+            color: #343a40;
+        }
+        .card {
+            border-radius: 10px;
+        }
+        .card-title {
+            color: #007bff;
+        }
+        .alert-info {
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container my-5">
+        <h1 class="text-center mb-4">Smart Contract Interface</h1>
+        <p class="text-center text-secondary mb-5">
+            Interact with your smart contract effortlessly. Transfer funds and view the current contract balance with ease.
+        </p>
+
+        <div class="card shadow mb-4">
+            <div class="card-body">
+                <h3 class="card-title">Transfer Funds</h3>
+                <p class="text-secondary">
+                    Enter the amount of Ether you’d like to transfer to the smart contract and click "Send Funds."
+                </p>
+                <div class="input-group">
+                    <input type="number" id="amount" class="form-control" placeholder="Enter amount (in ETH)" />
+                    <button class="btn btn-primary" onclick="sendFunds()">Send Funds</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow">
+            <div class="card-body">
+                <h3 class="card-title">Contract Balance</h3>
+                <p class="text-secondary">
+                    Click below to retrieve and view the current balance of the contract.
+                </p>
+                <button class="btn btn-success mb-3" onclick="getBalance()">Get Contract Balance</button>
+                <p id="contractBalance" class="alert alert-info" style="display: none;"></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let web3;
+        let contract;
+        const contractAddress = '0x6b5e18134114a39f759d621bcdc06cd692ccdbbc';
+        const contractABI = [
+	{
+		"inputs": [],
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"internalType": "address",
+				"name": "to",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			}
+		],
+		"name": "FundsTransferred",
+		"type": "event"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address payable",
+				"name": "_to",
+				"type": "address"
+			}
+		],
+		"name": "transferFunds",
+		"outputs": [],
+		"stateMutability": "payable",
+		"type": "function"
+	},
+	{
+		"stateMutability": "payable",
+		"type": "receive"
+	},
+	{
+		"inputs": [],
+		"name": "contractBalance",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "owner",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	}
+];
+
+        if (window.ethereum) {
+            web3 = new Web3(window.ethereum);
+            window.ethereum.enable().catch(error => {
+                console.log("User denied account access");
+            });
+        } else {
+            alert("MetaMask not installed!");
+        }
+
+        contract = new web3.eth.Contract(contractABI, contractAddress);
+
+        async function sendFunds() {
+            const amount = document.getElementById("amount").value;
+            const accounts = await web3.eth.getAccounts();
+            const sender = accounts[0];
+            const amountInWei = web3.utils.toWei(amount, 'ether');
+
+            try {
+                await contract.methods.transferFunds(sender).send({ from: sender, value: amountInWei });
+                alert('Funds transferred successfully!');
+            } catch (error) {
+                alert('Transaction failed!');
+            }
+        }
+
+        async function getBalance() {
+            const balance = await contract.methods.contractBalance().call();
+            const balanceElement = document.getElementById("contractBalance");
+            balanceElement.style.display = "block";
+            balanceElement.innerText = `Balance: ${web3.utils.fromWei(balance, 'ether')} ETH`;
+        }
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
